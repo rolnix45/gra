@@ -38,7 +38,7 @@ public class gra extends ApplicationAdapter {
 	private BitmapFont wybieracz;
 	private BitmapFont wersjaTekst;
 	private BitmapFont twurca;
-	private String trybSlowo = "";
+	private String trybSlowo;
 
 	private Sound wybor;
 	private Sound umarcie;
@@ -65,15 +65,17 @@ public class gra extends ApplicationAdapter {
 		fps = new BitmapFont(Gdx.files.internal("font/dosvga437.fnt"));
 		punkter = new BitmapFont(Gdx.files.internal("font/dosvga437.fnt"));
 		wersjaTekst = new BitmapFont(Gdx.files.internal("font/dosvga437.fnt"));
-		wersjaTekst.getData().setScale(0.5f);
 		twurca = new BitmapFont(Gdx.files.internal("font/dosvga437.fnt"));
-		twurca.getData().setScale(0.5f);
 		koniec = new BitmapFont(Gdx.files.internal("font/dosvga437.fnt"));
+
+		twurca.getData().setScale(0.5f);
+		wersjaTekst.getData().setScale(0.5f);
 		koniec.getData().setScale(3.0f);
 
 		wybor = Gdx.audio.newSound(Gdx.files.internal("sounds/klikniecie.wav"));
 		umarcie = Gdx.audio.newSound(Gdx.files.internal("sounds/umarcie.wav"));
 		tlo = Gdx.audio.newMusic(Gdx.files.internal("sounds/muzyka.wav"));
+
 		tlo.setLooping(true);
 		tlo.setVolume(0.4f);
 
@@ -87,7 +89,7 @@ public class gra extends ApplicationAdapter {
 
 		mnoznik = 1000000;
 		tak = 1000000000;
-		poczatekCzas = TimeUtils.millis() / 1000;
+		trybSlowo = "";
 
 		ty = new Rectangle();
 		ty.x = (1366 / 2f) - (80f / 2f);
@@ -181,15 +183,13 @@ public class gra extends ApplicationAdapter {
 		kamerka.update();
 		zadanie.setProjectionMatrix(kamerka.combined);
 
-		String WERSJA = "v1.3";
-
 		zadanie.begin();
 		if (stan != State.START) zadanie.draw(fota, ty.x, ty.y);
 
 		for (Rectangle cos: new Array.ArrayIterator<>(kilkaCos)) zadanie.draw(cosTekstura, cos.x, cos.y);
 
 		fps.draw(zadanie, "" + Gdx.graphics.getFramesPerSecond(), 0.0f, hudKamerka.viewportHeight - 1);
-		wersjaTekst.draw(zadanie, WERSJA, hudKamerka.viewportWidth - 34, 21);
+		wersjaTekst.draw(zadanie, "v1.3.1", hudKamerka.viewportWidth - 51, 21);
 		twurca.draw(zadanie, "made by rolnix oczywiscie", hudKamerka.viewportWidth - 212, 10);
 
 		punkter.draw(zadanie, "PUNKTY: " + punkty, 0.0f, 20.0f);
@@ -205,9 +205,12 @@ public class gra extends ApplicationAdapter {
 	}
 
 	public void menu() {
-		if(Gdx.input.isKeyPressed(Input.Keys.F1) && stan == State.START) { tryb = 0; trybSlowo = "LATWY"; stan = State.RUNNING; wybor.play(); tlo.play(); }
-		if(Gdx.input.isKeyPressed(Input.Keys.F2) && stan == State.START) { tryb = 1; trybSlowo = "SREDNI"; stan = State.RUNNING; wybor.play(); tlo.play(); }
-		if(Gdx.input.isKeyPressed(Input.Keys.F3) && stan == State.START) { tryb = 2; trybSlowo = "TRUDNY"; stan = State.RUNNING; wybor.play(); tlo.play(); }
+		if (Gdx.input.isKeyPressed(Input.Keys.F1) && stan == State.START) { tryb = 0; trybSlowo = "LATWY"; stan = State.RUNNING;
+			wybor.play(); tlo.play(); poczatekCzas = TimeUtils.millis() / 1000; }
+		if (Gdx.input.isKeyPressed(Input.Keys.F2) && stan == State.START) { tryb = 1; trybSlowo = "SREDNI"; stan = State.RUNNING;
+			wybor.play(); tlo.play(); poczatekCzas = TimeUtils.millis() / 1000; }
+		if (Gdx.input.isKeyPressed(Input.Keys.F3) && stan == State.START) { tryb = 2; trybSlowo = "TRUDNY"; stan = State.RUNNING;
+			wybor.play(); tlo.play(); poczatekCzas = TimeUtils.millis() / 1000; }
 	}
 
 	@Override
