@@ -1,9 +1,10 @@
 # gra
-switna gra \
-wymagania: java 7
+swietna gra \
+wymagania: java 8 (czyli zadne)
+\
 \
 jak mi sie kiedys uda zrobic to bedzie wersja w przegladarce
 ale na razie nie dziala💀
-
-## v1.3.1
-jakies poprawki bo bylo za duzo bledow
+\
+\
+`jak nie wiesz jak pobrac to po prawo masz Releases i potem gra-1.x.jar`
