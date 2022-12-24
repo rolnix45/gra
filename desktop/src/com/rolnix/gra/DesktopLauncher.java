@@ -13,6 +13,7 @@ public class DesktopLauncher {
 		config.setForegroundFPS(60);
 		config.setTitle("gra");
 		config.useVsync(false);
+		config.setResizable(false);
 		config.setWindowIcon("icon.png");
 		config.setWindowedMode(1366, 768);
 		new Lwjgl3Application(new gra(), config);

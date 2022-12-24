@@ -4,10 +4,13 @@ import com.badlogic.gdx.*;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
@@ -15,6 +18,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.TimeUtils;
+
 import java.util.Iterator;
 
 public class gra extends ApplicationAdapter {
@@ -32,7 +36,10 @@ public class gra extends ApplicationAdapter {
 	private Texture fota;
 	private Texture cosTekstura;
 	private Texture przyciemnienie;
+	private Texture pociskTextura;
+	private Texture tlo;
 	private Array<Rectangle> kilkaCos;
+	private Array<Rectangle> kilkaPocisk;
 
 	private BitmapFont fps;
 	private BitmapFont koniec;
@@ -43,29 +50,41 @@ public class gra extends ApplicationAdapter {
 	private BitmapFont wersjaTekst;
 	private BitmapFont twurca;
 	private BitmapFont pauza;
-	private BitmapFont achievementWyjcie;
 	private BitmapFont achTekst1;
 	private BitmapFont achTekst2;
 	private BitmapFont achTekst3;
 	private BitmapFont achTekst4;
-	private String trybSlowo;
+	private BitmapFont info;
+	private BitmapFont wyjatek;
 
-	private boolean ach1;
-	private boolean ach2;
-	private boolean ach3;
-	private boolean ach4;
+	private FreeTypeFontGenerator generator;
+
+	private String trybSlowo;
+	private String wyjatekTekst;
+
+	private boolean ach1 = false;
+	private boolean ach2 = false;
+	private boolean ach3 = false;
+	private boolean ach4 = false;
 
 	private Sound wybor;
 	private Sound umarcie;
-	private Music tlo;
+	private Sound strzal;
+	private Music tloMuzyka;
+
+	private ParticleEffect wybuchCos;
 
 	private long tak;
 	private long czasOdOstatnieCos;
+	private long czasOdOstatnieAmmo;
+	private long czasTeraz;
 	private long poczatekCzas;
 	private long licznik;
 	private int punkty;
 	private int mnoznik;
 	private int szypkosc;
+	private int predkoscStrzalu;
+	private int ammo;
 	private byte tryb;
 
 	@Override
@@ -73,27 +92,30 @@ public class gra extends ApplicationAdapter {
 		fota = new Texture(Gdx.files.internal("textures/fota.png"));
 		cosTekstura = new Texture(Gdx.files.internal("textures/cos.png"));
 		przyciemnienie = new Texture(Gdx.files.internal("textures/przyciemnienie.png"));
+		pociskTextura = new Texture(Gdx.files.internal("textures/pocisk.png"));
+		tlo = new Texture(Gdx.files.internal("textures/tlo.png"));
 
-		wybieracz = new BitmapFont(Gdx.files.internal("font/dosvga437.fnt"));
-		czaser = new BitmapFont(Gdx.files.internal("font/dosvga437.fnt"));
-		tryber = new BitmapFont(Gdx.files.internal("font/dosvga437.fnt"));
-		fps = new BitmapFont(Gdx.files.internal("font/dosvga437.fnt"));
-		punkter = new BitmapFont(Gdx.files.internal("font/dosvga437.fnt"));
-		wersjaTekst = new BitmapFont(Gdx.files.internal("font/dosvga437.fnt"));
-		twurca = new BitmapFont(Gdx.files.internal("font/dosvga437.fnt"));
-		koniec = new BitmapFont(Gdx.files.internal("font/dosvga437.fnt"));
-		pauza = new BitmapFont(Gdx.files.internal("font/dosvga437.fnt"));
-		achievementWyjcie = new BitmapFont(Gdx.files.internal("font/dosvga437.fnt"));
-		achTekst1 = new BitmapFont(Gdx.files.internal("font/dosvga437.fnt"));
-		achTekst2 = new BitmapFont(Gdx.files.internal("font/dosvga437.fnt"));
-		achTekst3 = new BitmapFont(Gdx.files.internal("font/dosvga437.fnt"));
-		achTekst4 = new BitmapFont(Gdx.files.internal("font/dosvga437.fnt"));
+		wybieracz = new BitmapFont(Gdx.files.internal("font/czcionka.fnt"));
+		czaser = new BitmapFont(Gdx.files.internal("font/czcionka.fnt"));
+		tryber = new BitmapFont(Gdx.files.internal("font/czcionka.fnt"));
+		fps = new BitmapFont(Gdx.files.internal("font/czcionka.fnt"));
+		punkter = new BitmapFont(Gdx.files.internal("font/czcionka.fnt"));
+		wersjaTekst = new BitmapFont(Gdx.files.internal("font/male.fnt"));
+		twurca = new BitmapFont(Gdx.files.internal("font/male.fnt"));
+		koniec = new BitmapFont(Gdx.files.internal("font/czcionka.fnt"));
+		pauza = new BitmapFont(Gdx.files.internal("font/czcionka.fnt"));
+		achTekst1 = new BitmapFont(Gdx.files.internal("font/czcionka.fnt"));
+		achTekst2 = new BitmapFont(Gdx.files.internal("font/czcionka.fnt"));
+		achTekst3 = new BitmapFont(Gdx.files.internal("font/czcionka.fnt"));
+		achTekst4 = new BitmapFont(Gdx.files.internal("font/czcionka.fnt"));
+		info = new BitmapFont(Gdx.files.internal("font/czcionka.fnt"));
 
-		zapis = Gdx.files.local("/save.rff");
-		boolean czyIstniejeZapis = Gdx.files.local("/save.rff").exists();
+		generator = new FreeTypeFontGenerator(Gdx.files.internal("font/czcionka.ttf"));
+		FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+		parameter.size = 28;
+		parameter.color = Color.RED;
+		wyjatek = generator.generateFont(parameter);
 
-		twurca.getData().setScale(0.5f);
-		wersjaTekst.getData().setScale(0.5f);
 		koniec.getData().setScale(3.0f);
 		pauza.getData().setScale(3.0f);
 		achTekst1.getData().setScale(1.5f);
@@ -101,12 +123,19 @@ public class gra extends ApplicationAdapter {
 		achTekst3.getData().setScale(1.5f);
 		achTekst4.getData().setScale(1.5f);
 
+		zapis = Gdx.files.local("./save.rff");
+		boolean czyIstniejeZapis = Gdx.files.local("./save.rff").exists();
+
 		wybor = Gdx.audio.newSound(Gdx.files.internal("sounds/klikniecie.wav"));
 		umarcie = Gdx.audio.newSound(Gdx.files.internal("sounds/umarcie.wav"));
-		tlo = Gdx.audio.newMusic(Gdx.files.internal("sounds/muzyka.wav"));
+		strzal = Gdx.audio.newSound(Gdx.files.internal("sounds/strzal.wav"));
+		tloMuzyka = Gdx.audio.newMusic(Gdx.files.internal("sounds/muzyka.wav"));
 
-		tlo.setLooping(true);
-		tlo.setVolume(0.4f);
+		wybuchCos = new ParticleEffect();
+		wybuchCos.load(Gdx.files.internal("particles/wybuchCos"), Gdx.files.internal("particles"));
+
+		tloMuzyka.setLooping(true);
+		tloMuzyka.setVolume(0.4f);
 
 		kamerka = new OrthographicCamera();
 		kamerka.setToOrtho(false, 1366, 768);
@@ -116,9 +145,16 @@ public class gra extends ApplicationAdapter {
 
 		zadanie = new SpriteBatch();
 
+		wyjatekTekst = "";
+
+		czasTeraz = 0;
 		mnoznik = 1000000;
 		tak = 1000000000;
 		trybSlowo = "";
+
+		predkoscStrzalu = 500;
+		ammo = 1;
+		punkty = 0;
 
 		ty = new Rectangle();
 		ty.x = (1366 / 2f) - (80f / 2f);
@@ -127,9 +163,12 @@ public class gra extends ApplicationAdapter {
 		ty.height = 80 - 28;
 
 		kilkaCos = new Array<>();
+		kilkaPocisk = new Array<>();
 
-		if (czyIstniejeZapis) { wczytaj(); }
+		if (czyIstniejeZapis) wczytaj();
 	}
+
+
 
 	private void spawnCos() {
 		Rectangle cos = new Rectangle();
@@ -139,6 +178,16 @@ public class gra extends ApplicationAdapter {
 		cos.height = 64;
 		kilkaCos.add(cos);
 		czasOdOstatnieCos = TimeUtils.nanoTime();
+	}
+
+	private void spawnPocisk() {
+		Rectangle pocisk = new Rectangle();
+		pocisk.x = ty.x + 40;
+		pocisk.y = ty.y + 26;
+		pocisk.width = 32;
+		pocisk.height = 32;
+		kilkaPocisk.add(pocisk);
+		strzal.play();
 	}
 
 	@Override
@@ -157,9 +206,9 @@ public class gra extends ApplicationAdapter {
 				pauzaPetla();
 				break;
 			case KONIEC:
+				koniecPetla();
 				break;
 		} draw();
-		//System.out.println(stan);
 	}
 
 	public void update() {
@@ -167,7 +216,9 @@ public class gra extends ApplicationAdapter {
 		if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) ty.x -= 200 * Gdx.graphics.getDeltaTime();
 		if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) ty.x += 200 * Gdx.graphics.getDeltaTime();
 
-		if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && stan == State.RUNNING) stan = State.PAUSE;
+		if (Gdx.input.isKeyJustPressed(Input.Keys.X) && ammo > 0) { spawnPocisk(); ammo--; }
+
+		if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) && stan == State.RUNNING) pauzaRaz();
 
 		//blokuje zeby gracz nie wyszedl za ekran
 		if (ty.x < 0) ty.x = 0;
@@ -175,6 +226,12 @@ public class gra extends ApplicationAdapter {
 
 		//spawnuje cos
 		if (TimeUtils.nanoTime() - czasOdOstatnieCos > tak) spawnCos();
+
+		//dodaje ammo co 15 sek
+		if (TimeUtils.millis()  - czasOdOstatnieAmmo > 15000) {
+			ammo++;
+			czasOdOstatnieAmmo = TimeUtils.millis();
+		}
 
 		//poziomy trudnosci
 		tak -= mnoznik;
@@ -212,8 +269,8 @@ public class gra extends ApplicationAdapter {
 		if (punkty == 200 && ach1 && ach2 && ach3) ach4 = true;
 
 		//liczy czas
-		long minietyCzas = TimeUtils.millis() / 1000;
-		licznik = minietyCzas - poczatekCzas;
+		czasTeraz = TimeUtils.millis();
+		licznik = (czasTeraz / 1000) - (poczatekCzas / 1000);
 
 		//sprawdza kolizje i niszczy cos
 		for (Iterator<Rectangle> iter = new Array.ArrayIterator<>(kilkaCos).iterator(); iter.hasNext();) {
@@ -223,92 +280,137 @@ public class gra extends ApplicationAdapter {
 			if (cos.overlaps(ty)) { fota = new Texture(Gdx.files.internal("textures/ded.png")); koniecRaz(); }
 		}
 
+		for (Iterator<Rectangle> iter = new Array.ArrayIterator<>(kilkaPocisk).iterator(); iter.hasNext();) {
+			Rectangle pocisk = iter.next();
+			pocisk.y += predkoscStrzalu * Gdx.graphics.getDeltaTime();
+			if (pocisk.y > 512) { iter.remove(); }
+			for (Iterator<Rectangle> iter2 = new Array.ArrayIterator<>(kilkaCos).iterator(); iter2.hasNext();) {
+				Rectangle cos = iter2.next();
+				if (pocisk.overlaps(cos)) {
+					iter2.remove(); iter.remove();
+					wybuchCos.getEmitters().first().setPosition(cos.x, cos.y);
+					wybuchCos.start();
+				}
+			}
+		}
+
+		wybuchCos.update(Gdx.graphics.getDeltaTime());
 
 		//zapisuje
-		zapis.writeString(ach1 + "/" + ach2 + "/" + ach3 + "/" + ach4, false);
-		System.out.println(ach1 + "/" + ach2 + "/" + ach3 + "/" + ach4);
+		try {
+			zapis.writeString(ach1 + "/" + ach2 + "/" + ach3 + "/" + ach4, false);
+		} catch (Exception e) {
+			wyjatekTekst = "BLAD ZAPISU: " + System.lineSeparator() + e;
+			System.out.println(wyjatekTekst);
+		}
 	}
 
 	public void draw() {
-		//rozne kolory na rozne stany
-		if (stan == State.START || stan == State.ACHIEVEMENT) ScreenUtils.clear(0.62f,0.28f,1.0f, 0);
-		else if (stan == State.RUNNING) ScreenUtils.clear(0.92f,0.52f,0.95f, 0);
-		else if (stan == State.KONIEC) ScreenUtils.clear(1.0f,0.3f,0.3f, 0);
-		else if (stan == State.PAUSE) ScreenUtils.clear(0.92f,0.52f,0.95f, 0);
+		ScreenUtils.clear(0, 0, 0, 0);
 
 		kamerka.update();
 		zadanie.setProjectionMatrix(kamerka.combined);
 
 		zadanie.begin();
 
-		//stan == RUNNING
-		if (stan == State.RUNNING) {
-			for (Rectangle cos: new Array.ArrayIterator<>(kilkaCos)) zadanie.draw(cosTekstura, cos.x, cos.y);
-			zadanie.draw(fota, ty.x, ty.y);
+		zadanie.draw(tlo, 0, 0);
+
+		switch (stan) {
+			case RUNNING:
+				for (Rectangle cos: new Array.ArrayIterator<>(kilkaCos)) zadanie.draw(cosTekstura, cos.x, cos.y);
+				for (Rectangle pocisk: new Array.ArrayIterator<>(kilkaPocisk)) zadanie.draw(pociskTextura, pocisk.x, pocisk.y);
+				info.draw(zadanie, "AMMO: " + ammo, 1366.f / 2, hudKamerka.viewportHeight - 1);
+				zadanie.draw(fota, ty.x, ty.y);
+				wybuchCos.draw(zadanie);
+				break;
+
+			case START:
+				wybieracz.draw(zadanie,
+						"F1 - LATWY" + System.lineSeparator() + "F2 - SREDNI" + System.lineSeparator() + "F3 - TRUDNY" + System.lineSeparator() + "F4 - ACHIEVEMENTY",
+						hudKamerka.viewportWidth / 2.0f, hudKamerka.viewportHeight / 2.0f);
+				break;
+
+			case ACHIEVEMENT:
+				info.draw(zadanie, "ESC - wyjscie", 2.0f, hudKamerka.viewportHeight - 35);
+				if (ach1) { achTekst1.draw(zadanie, "150 PUNKTOW NA LATWYM",
+						(hudKamerka.viewportWidth / 2.0f) - 500, (hudKamerka.viewportHeight / 2.0f) + 120); }
+				if (ach2) { achTekst2.draw(zadanie, "175 PUNKTOW NA SREDNIM",
+						(hudKamerka.viewportWidth / 2.0f) - 500, (hudKamerka.viewportHeight / 2.0f) + 60); }
+				if (ach3) { achTekst3.draw(zadanie, "200 PUNKTOW NA TRUDNYM",
+						(hudKamerka.viewportWidth / 2.0f) - 500, (hudKamerka.viewportHeight / 2.0f)); }
+				if (ach4) { achTekst4.draw(zadanie, "WSZYSTKIE ACHIEVEMENTY + 200 NA TRUDNYM ZNOWU",
+						(hudKamerka.viewportWidth / 2.0f) - 500, (hudKamerka.viewportHeight / 2.0f) - 60); }
+				break;
+
+			case PAUSE:
+				for (Rectangle cos: new Array.ArrayIterator<>(kilkaCos)) zadanie.draw(cosTekstura, cos.x, cos.y);
+				for (Rectangle cos: new Array.ArrayIterator<>(kilkaPocisk)) zadanie.draw(pociskTextura, cos.x, cos.y);
+				zadanie.draw(fota, ty.x, ty.y);
+				zadanie.draw(przyciemnienie, 0, 0);
+				pauza.draw(zadanie, "PAUZA", (hudKamerka.viewportWidth - 100) / 2.0f, hudKamerka.viewportHeight / 2.0f);
+				info.draw(zadanie, "BACKSPACE - RESET",  2.0f, hudKamerka.viewportHeight - 35);
+				break;
+
+			case KONIEC:
+				for (Rectangle cos: new Array.ArrayIterator<>(kilkaCos)) zadanie.draw(cosTekstura, cos.x, cos.y);
+				for (Rectangle cos: new Array.ArrayIterator<>(kilkaPocisk)) zadanie.draw(pociskTextura, cos.x, cos.y);
+				zadanie.draw(fota, ty.x, ty.y);
+				koniec.draw(zadanie, "UMARES", (hudKamerka.viewportWidth - 100) / 2.0f, hudKamerka.viewportHeight / 2.0f);
+				info.draw(zadanie, "BACKSPACE - RESET",  2.0f, hudKamerka.viewportHeight - 35);
+				break;
 		}
-
-		//stan == START
-		if (stan == State.START) wybieracz.draw(zadanie, "F1 - LATWY" + '\n' + "F2 - SREDNI" + '\n' + "F3 - TRUDNY" + '\n' + "F4 - ACHIEVEMENTY",
-				hudKamerka.viewportWidth / 2.0f, hudKamerka.viewportHeight / 2.0f);
-
-		//stan == ACHIEVEMENT
-		if (stan == State.ACHIEVEMENT) {
-			achievementWyjcie.draw(zadanie, "ESC - wyjscie", 0.0f, hudKamerka.viewportHeight - 21);
-			if (ach1) { achTekst1.draw(zadanie, "150 PUNKTOW NA LATWYM", (hudKamerka.viewportWidth / 2.0f) - 500, (hudKamerka.viewportHeight / 2.0f) + 120); }
-			if (ach2) { achTekst2.draw(zadanie, "175 PUNKTOW NA SREDNIM", (hudKamerka.viewportWidth / 2.0f) - 500, (hudKamerka.viewportHeight / 2.0f) + 60); }
-			if (ach3) { achTekst3.draw(zadanie, "200 PUNKTOW NA TRUDNYM", (hudKamerka.viewportWidth / 2.0f) - 500, (hudKamerka.viewportHeight / 2.0f)); }
-			if (ach4) { achTekst4.draw(zadanie, "WSZYSTKIE ACHIEVEMENTY + 200 NA TRUDNYM ZNOWU", (hudKamerka.viewportWidth / 2.0f) - 500, (hudKamerka.viewportHeight / 2.0f) - 60); }
-		}
-
-		//stan == KONIEC
-		if (stan == State.KONIEC) {
-			for (Rectangle cos: new Array.ArrayIterator<>(kilkaCos)) zadanie.draw(cosTekstura, cos.x, cos.y);
-			zadanie.draw(fota, ty.x, ty.y);
-			koniec.draw(zadanie, "UMARES", (hudKamerka.viewportWidth - 100) / 2.0f, hudKamerka.viewportHeight / 2.0f);
-		}
-
-		//stan == PAUSE
-		if (stan == State.PAUSE) {
-			for (Rectangle cos: new Array.ArrayIterator<>(kilkaCos)) zadanie.draw(cosTekstura, cos.x, cos.y);
-			zadanie.draw(fota, ty.x, ty.y);
-			zadanie.draw(przyciemnienie, 0, 0);
-			pauza.draw(zadanie, "PAUZA", (hudKamerka.viewportWidth - 100) / 2.0f, hudKamerka.viewportHeight / 2.0f);
-		}
-
 		//zawsze
-		fps.draw(zadanie, "" + Gdx.graphics.getFramesPerSecond(), 0.0f, hudKamerka.viewportHeight - 1);
+		fps.draw(zadanie, "" + Gdx.graphics.getFramesPerSecond(), 2.0f, hudKamerka.viewportHeight - 2);
 
-		punkter.draw(zadanie, "PUNKTY: " + punkty, 0.0f, 20.0f);
-		czaser.draw(zadanie, "CZAS: " + licznik, 0.0f, 40.0f);
+		punkter.draw(zadanie, "PUNKTY: " + punkty, 2.0f, 25.0f);
+		czaser.draw(zadanie, "CZAS: " + licznik, 2.0f, 50.0f);
 
-		wersjaTekst.draw(zadanie, "v1.4", hudKamerka.viewportWidth - 34, 21);
-		twurca.draw(zadanie, "copyright by rolnix", hudKamerka.viewportWidth - 161, 10);
+		wersjaTekst.draw(zadanie, "v1.5", hudKamerka.viewportWidth - 50, 30);
+		twurca.draw(zadanie, "copyright by rolnix", hudKamerka.viewportWidth - 244, 15);
 
-		tryber.draw(zadanie, trybSlowo, hudKamerka.viewportWidth - 100, hudKamerka.viewportHeight - 1);
+		tryber.draw(zadanie, trybSlowo, hudKamerka.viewportWidth - 120, hudKamerka.viewportHeight - 2);
+
+		wyjatek.draw(zadanie, wyjatekTekst, 2.0f, hudKamerka.viewportHeight - 2);
 
 		zadanie.end();
 	}
 
 	public void menu() {
-		if (Gdx.input.isKeyPressed(Input.Keys.F1)) { rozpocznij((byte) 0, "LATWY"); }
-		if (Gdx.input.isKeyPressed(Input.Keys.F2)) { rozpocznij((byte) 1, "SREDNI"); }
-		if (Gdx.input.isKeyPressed(Input.Keys.F3)) { rozpocznij((byte) 2, "TRUDNY"); }
-		if (Gdx.input.isKeyPressed(Input.Keys.F4)) { achievementRaz(); }
+		if (Gdx.input.isKeyPressed(Input.Keys.F1)) {
+			rozpocznij((byte) 0, "LATWY"); }
+		if (Gdx.input.isKeyPressed(Input.Keys.F2)) {
+			rozpocznij((byte) 1, "SREDNI"); }
+		if (Gdx.input.isKeyPressed(Input.Keys.F3)) {
+			rozpocznij((byte) 2, "TRUDNY"); }
+		if (Gdx.input.isKeyPressed(Input.Keys.F4)) {achievementRaz(); }
 	}
 
 	public void rozpocznij(byte wybrane, String trybNapis) {
-		poczatekCzas = TimeUtils.millis() / 1000;
+		poczatekCzas = TimeUtils.millis();
+		czasOdOstatnieAmmo = TimeUtils.millis();
 		tryb = wybrane;
 		trybSlowo = trybNapis;
 		stan = State.RUNNING;
 		wybor.play();
-		tlo.play();
+		tloMuzyka.play();
 	}
 
+	//pauza
 	public void pauzaPetla() {
-		if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) stan = State.RUNNING;
+		if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+			stan = State.RUNNING;
+		}
+		if (Gdx.input.isKeyJustPressed(Input.Keys.BACKSPACE)) {
+			create();
+			tloMuzyka.stop();
+			stan = State.START;
+		}
+	}
+	public void pauzaRaz() {
+		stan = State.PAUSE;
 	}
 
+	//achievementy
 	public void achivementyPetla() {
 		if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
 			stan = State.START;
@@ -320,9 +422,18 @@ public class gra extends ApplicationAdapter {
 		wybor.play();
 	}
 
+	//umarcie
+
+	public void koniecPetla() {
+		if (Gdx.input.isKeyJustPressed(Input.Keys.BACKSPACE)) {
+			create();
+			tloMuzyka.stop();
+			stan = State.START;
+		}
+	}
 	public void koniecRaz() {
 		stan = State.KONIEC;
-		tlo.stop();
+		tloMuzyka.stop();
 		umarcie.play();
 	}
 
@@ -341,6 +452,9 @@ public class gra extends ApplicationAdapter {
 		cosTekstura.dispose();
 		fota.dispose();
 		przyciemnienie.dispose();
+		pociskTextura.dispose();
+
+		wybuchCos.dispose();
 
 		wybieracz.dispose();
 		czaser.dispose();
@@ -351,14 +465,16 @@ public class gra extends ApplicationAdapter {
 		twurca.dispose();
 		koniec.dispose();
 		pauza.dispose();
-		achievementWyjcie.dispose();
 		achTekst1.dispose();
 		achTekst2.dispose();
 		achTekst3.dispose();
 		achTekst4.dispose();
+		info.dispose();
+
+		generator.dispose();
 
 		wybor.dispose();
 		umarcie.dispose();
-		tlo.dispose();
+		tloMuzyka.dispose();
 	}
 }

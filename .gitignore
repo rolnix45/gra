@@ -116,4 +116,8 @@ Thumbs.db
 ## moje
 assets/save.rff
 /save.rff
-/html/
+/html/*
+/html/src/
+/html/build.gradle
+/html/webapp/
+/.idea/
