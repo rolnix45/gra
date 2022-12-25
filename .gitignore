@@ -120,4 +120,4 @@ assets/save.rff
 /html/src/
 /html/build.gradle
 /html/webapp/
-/.idea/
+/.idea/*
